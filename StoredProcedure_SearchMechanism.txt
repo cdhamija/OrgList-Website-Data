@@ -1,0 +1,226 @@
+/****** Object:  StoredProcedure [dbo].[CASE_SEARCH_ExecuteSearch]    Script Date: 3/21/2014 2:08:35 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[CASE_SEARCH_ExecuteSearch]
+       @IDType int = 0,
+       @CaseID int = NULL,
+       @UFID varchar(500),
+       @UID varchar(100),
+       @CurrentPage int,
+       @MaxRows int,
+       @SSRS bit
+AS
+BEGIN
+ 
+DECLARE @searchCriteria nvarchar(4000)
+DECLARE @countQuery nvarchar(4000)
+DECLARE @grandQuery nvarchar(4000);
+DECLARE @templateQuery nvarchar(4000)
+DECLARE @ssrsQuery nvarchar(4000)
+DECLARE @statsQuery nvarchar(4000)
+ 
+-- PAGING VARIABLES
+DECLARE @rowStart int
+DECLARE @rowEnd int
+DECLARE @ResultCount int
+ 
+SET @rowStart = @MaxRows * (@CurrentPage - 1)
+SET @rowEnd = @rowStart + @MaxRows
+ 
+-- CURSOR VARIABLES
+DECLARE @columnType tinyint, @displayName varchar(45), @columnName varchar(65), @searchValue varchar(50), @operator tinyint, @comparator tinyint
+ 
+IF @CaseID IS NULL
+BEGIN
+ 
+       DECLARE db_cursor CURSOR FOR SELECT ColumnType, DisplayName, ColumnName, SearchValue, Operator, Comparator FROM CORE_SEARCH_UserSearchMapping WHERE UFID=@UFID AND UID=@UID
+ 
+       OPEN db_cursor
+       FETCH NEXT FROM db_cursor INTO @columnType, @displayName, @columnName, @searchValue, @operator, @comparator
+ 
+       WHILE @@FETCH_STATUS = 0
+       BEGIN
+ 
+       DECLARE @finalCriteria varchar(1000)
+       DECLARE @StringOperator varchar(9)
+       DECLARE @StringComparator varchar(9)
+ 
+ 
+ 
+ 
+       -- SETUP THE OPERATOR STRING
+       SET @StringOperator = (CASE
+              WHEN @operator = 0 THEN 'AND'
+              WHEN @operator IS NULL THEN 'AND'
+              WHEN @operator = 1 THEN 'OR'
+              WHEN @operator = 2 THEN 'NOT'
+       END)
+ 
+       -- SETUP THE COMPARATOR STRING
+       SET @StringComparator = (CASE
+              WHEN @comparator = 0 THEN 'LIKE'
+              WHEN @comparator IS NULL THEN 'LIKE'
+              WHEN @comparator = 1 THEN 'NOT LIKE'
+              WHEN @comparator = 2 THEN '='
+              WHEN @comparator = 3 THEN '<>'
+              WHEN @comparator = 4 THEN '>'
+              WHEN @comparator = 5 THEN '>='
+              WHEN @comparator = 6 THEN '<'
+              WHEN @comparator = 7 THEN '<='
+       END)
+ 
+       -- SAFETY NET FOR CASE TYPE TREE SEARCH, MUST ALWAYS BE "AND"
+       IF @columnType = 4 AND @operator <> 0
+              SET @StringOperator = 'AND'
+ 
+       IF @finalCriteria IS NOT NULL
+              SET @finalCriteria = @finalCriteria + N' ' + @StringOperator + ' '
+       ELSE
+              SET @finalCriteria = ''
+ 
+ 
+       IF @columnType = 0 --STRING VALUE
+       BEGIN
+              -- COMPARATOR SAFETY CHECK
+              IF @comparator >= 3
+                     SET @StringComparator = 'LIKE'
+              SET @searchValue = N'%' + REPLACE(@searchValue, N' ',N'%') + N'%'
+              SET @finalCriteria = @finalCriteria + @columnName + N' ' + @StringComparator +' ''' + @searchValue + N''''
+       END
+ 
+       IF @columnType = 1 OR @columnType = 5--INT VALUE
+       BEGIN
+              -- COMPARATOR SAFETY CHECK
+              IF @comparator < 2
+                     SET @StringComparator = '='
+              SET @finalCriteria = @finalCriteria + @columnName + N' ' + @StringComparator +' ' + REPLACE(@searchValue, N',',N'') + N''
+       END
+ 
+       IF @columnType = 2 --DECIMAL VALUE
+       BEGIN
+              -- COMPARATOR SAFETY CHECK
+              IF @comparator < 2
+                     SET @StringComparator = '='
+              SET @finalCriteria = @finalCriteria + @columnName + N' ' + @StringComparator +' ' + REPLACE(REPLACE(@searchValue, N',',N''), N'$',N'') + N''
+       END
+ 
+       IF @columnType = 3 --DATETIME VALUE
+       BEGIN
+              -- COMPARATOR SAFETY CHECK
+              IF @comparator < 2
+                     SET @StringComparator = '='
+              SET @finalCriteria = @finalCriteria + @columnName + N' ' + @StringComparator +' ' + CONVERT(DATETIME,@searchValue) + N''
+       END
+ 
+       IF @columnType = 4
+       BEGIN
+              DECLARE @endResult varchar(1000)
+              SET @endResult = dbo.GetCaseTypeTree(@columnName,@searchValue)
+              IF @endResult IS NOT NULL
+              BEGIN
+                     SET @finalCriteria = @finalCriteria + N'(' + @endResult + N')'
+              END
+ 
+              --SELECT @finalCriteria
+       END
+ 
+       IF @searchCriteria IS NULL
+              SET @searchCriteria = N''
+ 
+       SET @searchCriteria = @searchCriteria + @finalCriteria
+       SET @finalCriteria = N''
+ 
+ 
+       FETCH NEXT FROM db_cursor INTO @columnType, @displayName, @columnName, @searchValue, @operator, @comparator
+ 
+       END
+ 
+       CLOSE db_cursor
+       DEALLOCATE db_cursor
+ 
+       IF LEN(LTRIM(RTRIM(@searchCriteria))) <= 0
+       BEGIN
+              SET @searchCriteria = NULL
+       END
+ 
+END
+ELSE
+BEGIN
+       IF @IDType = 0
+       BEGIN
+              SET @searchCriteria = 'CaseID=' + CONVERT(nvarchar(4000),@CaseID)
+       END
+       ELSE
+       BEGIN
+              SET @searchCriteria = 'SLSID=' + CONVERT(nvarchar(4000),@CaseID)
+       END
+ 
+END
+ 
+--SELECT @searchCriteria
+ 
+SET @countQuery = 'SELECT @result = COUNT(CaseID) FROM (SELECT CaseID FROM CASE_SEARCH_Overview'
+SET @templateQuery = 'CaseID, SLSID FROM CASE_SEARCH_Overview'
+SET @ssrsQuery = 'MAX(Gender) AS Gender, MAX(CAST(Citizen AS INT)) AS Citizen, MAX(CreditHours) AS CreditHours, MAX(TypeName) AS CaseType, CaseID FROM CASE_Search_Overview'
+SET @statsQuery = 'SELECT Sum(MoneySaved) As MoneySaved, Sum(MoneyRecovered) AS MoneyRecovered, Sum(AttorneyFees) AS AttorneyFees, Sum(CaseTime) AS CaseTime FROM (SELECT Max(MoneySaved) AS MoneySaved, Max(MoneyRecovered) AS MoneyRecovered, Max(AttorneyFees) AS AttorneyFees, Max(CaseTime) AS CaseTime, CaseID FROM [CASE_SEARCH_Overview]'
+ 
+IF @searchCriteria IS NOT NULL
+BEGIN
+       SET @countQuery = @countQuery + ' WHERE ' + @searchCriteria
+       SET @templateQuery = @templateQuery + ' WHERE ' + @searchCriteria
+       SET @ssrsQuery = @ssrsQuery + ' WHERE ' + @searchCriteria + ' AND CaseType IS NOT NULL'
+       SET @statsQuery = @statsQuery + ' WHERE ' + @searchCriteria
+END
+ELSE
+BEGIN
+       SET @ssrsQuery = @ssrsQuery + ' WHERE CaseType IS NOT NULL'
+END
+ 
+SET @countQuery = @countQuery + ' GROUP BY CaseID, SLSID) AS Cases'
+SET @templateQuery = @templateQuery + ' GROUP BY CaseID, SLSID'
+SET @ssrsQuery = @ssrsQuery + ' GROUP BY CaseID'
+SET @statsQuery = @statsQuery + '  GROUP BY CaseID) AS Stats'
+ 
+DECLARE @ParameterDefinition nvarchar(500)
+SET @ParameterDefinition = N'@result int OUTPUT'
+ 
+ 
+ 
+-- DUMP THE ROW COUNT INTO THE @ResultCount VARIABLE
+EXEC sp_executesql @countQuery, @ParameterDefinition, @result=@ResultCount OUTPUT
+ 
+IF @SSRS = 0
+BEGIN
+SELECT @ResultCount AS NumRows
+ 
+ 
+-- BUILD THE MASTER QUERY (INCLUDES THE ROW NUMBERS AND RESTRICTIONS)
+IF @MaxRows <= 0
+       SET @grandQuery = 'SELECT * FROM (SELECT TOP 100 PERCENT ROW_NUMBER() OVER(ORDER BY SLSID DESC) AS Row,' + @templateQuery + ') AS Constrain'
+ELSE
+       SET @grandQuery = 'SELECT * FROM (SELECT TOP 100 PERCENT ROW_NUMBER() OVER(ORDER BY SLSID DESC) AS Row,' + @templateQuery + ') AS Constrain WHERE Row >= ' + Convert(nvarchar(100), @rowStart) + ' AND Row < ' + Convert(nvarchar(100), @rowEnd)
+ 
+END
+ELSE
+BEGIN
+ 
+SET @grandQuery = 'SELECT ' + @ssrsQuery
+ 
+END
+ 
+--DEBUG SELECT STATEMENT
+--SELECT @grandQuery
+ 
+EXEC sp_executesql @grandQuery
+ 
+-- WE ARE NOT IN REPORTING MODE SO ENGAGE THE STATS QUERY
+IF @SSRS = 0
+BEGIN
+ 
+EXEC sp_executesql @statsQuery
+ 
+END
+ 
+END

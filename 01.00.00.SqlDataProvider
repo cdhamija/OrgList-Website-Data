@@ -1,0 +1,412 @@
+﻿/************************************************************/
+/*****              SqlDataProvider                     *****/
+/*****                                                  *****/
+/*****                                                  *****/
+/***** Note: To manually execute this script you must   *****/
+/*****       perform a search and replace operation     *****/
+/*****       for {databaseOwner} and {objectQualifier}  *****/
+/*****                                                  *****/
+/************************************************************/
+
+
+
+/************************************************************/
+/*****              SqlDataProvider                     *****/
+/************************************************************/
+
+/****** Object:  StoredProcedure [SAIOrganizationListDB_GetAdvisorsById]    Script Date: 2/14/2014 11:53:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[SAIOrganizationListDB_GetAdvisorsById]') AND type in (N'P', N'PC'))
+BEGIN
+EXEC dbo.sp_executesql @statement = N'CREATE PROCEDURE [SAIOrganizationListDB_GetAdvisorsById]
+(
+	@Id int
+)
+AS
+SET NOCOUNT ON;
+BEGIN SELECT *
+	FROM
+		[dbo].[SAI_Orgs_Advisors] AD
+	WHERE 
+		AD.Id = @Id
+		ORDER BY [Id] 
+END
+' 
+END
+GO
+/****** Object:  StoredProcedure [SAIOrganizationListDB_GetAdvisorsByModuleId]    Script Date: 2/14/2014 11:53:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[SAIOrganizationListDB_GetAdvisorsByModuleId]') AND type in (N'P', N'PC'))
+BEGIN
+EXEC dbo.sp_executesql @statement = N'
+CREATE PROCEDURE [SAIOrganizationListDB_GetAdvisorsByModuleId]
+
+(
+
+	@ModuleId int
+
+)
+
+AS
+
+SET NOCOUNT ON;
+
+BEGIN SELECT 
+
+	[Id]
+
+	FROM
+
+		[dbo].[SAI_Orgs_Advisors] AD
+
+	WHERE 
+
+		AD.ModuleId = @ModuleId
+
+ORDER BY [Id] 
+
+END' 
+END
+GO
+/****** Object:  StoredProcedure [SAIOrganizationListDB_GetAdvisorsByName]    Script Date: 2/14/2014 11:53:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[SAIOrganizationListDB_GetAdvisorsByName]') AND type in (N'P', N'PC'))
+BEGIN
+EXEC dbo.sp_executesql @statement = N'CREATE PROCEDURE [SAIOrganizationListDB_GetAdvisorsByName]
+(
+	@Name nvarchar
+)
+AS
+SET NOCOUNT ON;
+BEGIN SELECT *
+	FROM
+		[dbo].[SAI_Orgs_Advisors] AD
+	WHERE 
+		AD.AdvisorName = @Name
+END
+' 
+END
+GO
+/****** Object:  StoredProcedure [SAIOrganizationListDB_GetOrganizationByName]    Script Date: 2/14/2014 11:53:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[SAIOrganizationListDB_GetOrganizationByName]') AND type in (N'P', N'PC'))
+BEGIN
+EXEC dbo.sp_executesql @statement = N'CREATE PROCEDURE [SAIOrganizationListDB_GetOrganizationByName]
+(
+	@Name nvarchar
+)
+AS
+SET NOCOUNT ON;
+BEGIN SELECT *
+	FROM
+		[dbo].[SAI_Orgs_OrgLists] OG
+	WHERE 
+		OG.Organization = @Name
+END
+' 
+END
+GO
+/****** Object:  StoredProcedure [SAIOrganizationListDB_GetOrganizationsById]    Script Date: 2/14/2014 11:53:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[SAIOrganizationListDB_GetOrganizationsById]') AND type in (N'P', N'PC'))
+BEGIN
+EXEC dbo.sp_executesql @statement = N'CREATE PROCEDURE [SAIOrganizationListDB_GetOrganizationsById]
+(
+	@Id int
+)
+AS
+SET NOCOUNT ON;
+BEGIN SELECT *
+	FROM
+		[dbo].[SAI_Orgs_OrgLists] OL
+	WHERE 
+		OL.Id = @Id
+END
+' 
+END
+GO
+/****** Object:  StoredProcedure [SAIOrganizationListDB_GetOrganizationsByModuleId]    Script Date: 2/14/2014 11:53:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[SAIOrganizationListDB_GetOrganizationsByModuleId]') AND type in (N'P', N'PC'))
+BEGIN
+EXEC dbo.sp_executesql @statement = N'CREATE PROCEDURE [SAIOrganizationListDB_GetOrganizationsByModuleId]
+(
+	@ModuleId int
+)
+AS
+SET NOCOUNT ON;
+BEGIN SELECT 
+	[Id]
+	FROM
+		[dbo].[SAI_Orgs_OrgLists] OL
+	WHERE 
+		OL.ModuleId = @ModuleId
+ORDER BY [Id] 
+END
+' 
+END
+GO
+/****** Object:  StoredProcedure [SAIOrganizationListDB_SAIOrgs_Advisors_Insert]    Script Date: 2/14/2014 11:53:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[SAIOrganizationListDB_SAIOrgs_Advisors_Insert]') AND type in (N'P', N'PC'))
+BEGIN
+EXEC dbo.sp_executesql @statement = N'CREATE PROCEDURE [SAIOrganizationListDB_SAIOrgs_Advisors_Insert]
+(
+    @Id INT, 
+    @ModuleId INT, 
+    @StartLetter INT, 
+    @EndLetter INT, 
+    @AdvisorName NVARCHAR(200), 
+    @Email NVARCHAR(200), 
+    @Phone NVARCHAR(14) 
+)
+AS
+BEGIN
+	SET NOCOUNT ON;
+	BEGIN
+	--SET IDENTITY_INSERT [dbo].[SAI_Orgs_Advisors] ON
+INSERT INTO [dbo].[SAI_Orgs_Advisors]
+(
+    [ModuleId],
+    [StartLetter], 
+    [EndLetter], 
+    [AdvisorName], 
+    [Email], 
+    [Phone]
+)	
+VALUES (
+
+    @ModuleId, 
+    @StartLetter, 
+    @EndLetter, 
+    @AdvisorName, 
+    @Email, 
+    @Phone
+)	
+		SET @Id = @@IDENTITY
+	END
+	SELECT @Id AS Id
+	END
+' 
+END
+GO
+/****** Object:  StoredProcedure [SAIOrganizationListDB_SAIOrgs_OrgLists_Delete]    Script Date: 2/14/2014 11:53:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[SAIOrganizationListDB_SAIOrgs_OrgLists_Delete]') AND type in (N'P', N'PC'))
+BEGIN
+EXEC dbo.sp_executesql @statement = N'CREATE PROCEDURE [SAIOrganizationListDB_SAIOrgs_OrgLists_Delete]
+(
+    @Id INT,
+    @ModuleId INT, 
+    @Organization NVARCHAR(300), 
+    @Advisor INT, 
+    @FirstLetter INT
+)
+AS
+BEGIN
+DELETE FROM [dbo].[SAI_Orgs_OrgLists]
+WHERE
+(
+	[Id] 		   = @Id AND
+    [ModuleId]     = @ModuleId AND
+    [Organization] = @Organization AND
+    [Advisor]	   = @Advisor AND
+    [FirstLetter]  = @FirstLetter
+)
+END
+' 
+END
+GO
+/****** Object:  StoredProcedure [SAIOrganizationListDB_SAIOrgs_OrgLists_Insert]    Script Date: 2/14/2014 11:53:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[SAIOrganizationListDB_SAIOrgs_OrgLists_Insert]') AND type in (N'P', N'PC'))
+BEGIN
+EXEC dbo.sp_executesql @statement = N'CREATE PROCEDURE [SAIOrganizationListDB_SAIOrgs_OrgLists_Insert]
+(
+    @Id INT,
+    @ModuleId INT, 
+    @Organization NVARCHAR(300), 
+    @Advisor INT, 
+    @FirstLetter INT
+)
+AS
+BEGIN
+	SET NOCOUNT ON;
+	BEGIN
+	--SET IDENTITY_INSERT [dbo].[SAI_Orgs_OrgLists] ON
+INSERT INTO [dbo].[SAI_Orgs_OrgLists]
+(
+	 
+    [ModuleId], 
+    [Organization],
+    [Advisor],
+    [FirstLetter] 
+)	
+VALUES (
+   
+   @ModuleId, 
+   @Organization, 
+   @Advisor, 
+   @FirstLetter 
+)
+	SET @Id = @@IDENTITY
+	END
+	SELECT @Id AS Id
+	END
+' 
+END
+GO
+/****** Object:  StoredProcedure [SAIOrganizationListDB_UpdateAdvisors]    Script Date: 2/14/2014 11:53:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[SAIOrganizationListDB_UpdateAdvisors]') AND type in (N'P', N'PC'))
+BEGIN
+EXEC dbo.sp_executesql @statement = N'CREATE PROCEDURE [SAIOrganizationListDB_UpdateAdvisors]
+    @Id INT, 
+    @ModuleId INT, 
+    @StartLetter INT, 
+    @EndLetter INT, 
+    @AdvisorName NVARCHAR(200), 
+    @Email NVARCHAR(200), 
+    @Phone NVARCHAR(14) 
+AS
+BEGIN
+	SET NOCOUNT ON;
+	SET IDENTITY_INSERT [dbo].[SAI_Orgs_Advisors] ON
+	IF @Id > 0
+	BEGIN
+		UPDATE [SAI_Orgs_Advisors] SET ModuleId = @ModuleId, StartLetter = @StartLetter, EndLetter = @EndLetter, AdvisorName = @AdvisorName, Email = @Email, Phone = @Phone WHERE Id = @ID
+	END
+	ELSE
+	BEGIN
+		INSERT INTO [dbo].[SAI_Orgs_Advisors]
+(
+    [ModuleId],
+    [StartLetter], 
+    [EndLetter], 
+    [AdvisorName], 
+    [Email], 
+    [Phone]
+)	
+VALUES (
+    @ModuleId, 
+    @StartLetter, 
+    @EndLetter, 
+    @AdvisorName, 
+    @Email, 
+    @Phone
+)	
+		SET @Id = @@IDENTITY
+	END
+	SELECT @Id AS Id
+END' 
+END
+GO
+/****** Object:  StoredProcedure [SAIOrganizationListDB_UpdateOrganizations]    Script Date: 2/14/2014 11:53:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[SAIOrganizationListDB_UpdateOrganizations]') AND type in (N'P', N'PC'))
+BEGIN
+EXEC dbo.sp_executesql @statement = N'CREATE PROCEDURE [SAIOrganizationListDB_UpdateOrganizations]
+    @Id INT,
+    @ModuleId INT, 
+    @Organization NVARCHAR(300), 
+    @Advisor INT, 
+    @FirstLetter INT
+AS
+BEGIN
+	SET NOCOUNT ON;
+
+	IF @ID > 0
+	BEGIN
+		UPDATE [SAI_Orgs_OrgLists] SET ModuleId = @ModuleId, Organization = @Organization, Advisor = @Advisor, FirstLetter = @FirstLetter WHERE Id = @ID
+	END
+	ELSE
+	BEGIN
+		INSERT INTO [SAI_Orgs_OrgLists]  ([Id], [ModuleId], [Organization], [Advisor], [FirstLetter] ) VALUES ( @Id, @ModuleId, @Organization, @Advisor, @FirstLetter)
+		SET @Id = @@IDENTITY
+	END
+
+	SELECT @Id AS Id
+END' 
+END
+GO
+/****** Object:  Table [SAI_Orgs_Advisors]    Script Date: 2/14/2014 11:53:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[SAI_Orgs_Advisors]') AND type in (N'U'))
+BEGIN
+CREATE TABLE [SAI_Orgs_Advisors](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[ModuleId] [int] NULL,
+	[StartLetter] [int] NULL,
+	[EndLetter] [int] NULL,
+	[AdvisorName] [nvarchar](200) NULL,
+	[Email] [nvarchar](200) NULL,
+	[Phone] [nvarchar](14) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+END
+GO
+/****** Object:  Table [SAI_Orgs_OrgLists]    Script Date: 2/14/2014 11:53:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[SAI_Orgs_OrgLists]') AND type in (N'U'))
+BEGIN
+CREATE TABLE [SAI_Orgs_OrgLists](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[ModuleId] [int] NULL,
+	[Organization] [nchar](300) NULL,
+	[Advisor] [int] NULL,
+	[FirstLetter] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+END
+GO
+IF NOT EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[DF__SAI_Orgs___Advis__1273C1CD]') AND type = 'D')
+BEGIN
+ALTER TABLE [SAI_Orgs_OrgLists] ADD  DEFAULT ((-1)) FOR [Advisor]
+END
+
+GO
